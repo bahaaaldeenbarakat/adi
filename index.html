@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driving Instructor Diary</title>
+    <!-- Add Bootstrap CSS link -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Add your custom CSS styles here */
+        .hidden {
+            display: none;
+        }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            border: 1px solid #ccc;
+        }
+
+        .day {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .event {
+            background-color: #007bff;
+            color: white;
+            padding: 2px 5px;
+            margin-bottom: 2px;
+            font-size: 12px;
+            cursor: pointer; /* Add cursor pointer for clickable events */
+            position: relative;
+        }
+
+        .event-actions {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: none;
+        }
+
+        .event:hover .event-actions {
+            display: block;
+        }
+
+        /* Style for the current date */
+        .current-date {
+            background-color: lightblue;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        form input[type="date"],
+        form input[type="text"],
+        form input[type="time"],
+        form select,
+        form button {
+            margin-right: 10px;
+            margin-bottom: 10px; /* Add margin bottom for separating lines */
+        }
+
+        #navigation {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        #navigation button {
+            font-size: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            margin-bottom: 20px; /* Add margin bottom for separating lines */
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        hr {
+            border-top: 1px solid #ccc; /* Add horizontal line */
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header class="container">
+        <h1>Welcome to Driving Instructor Diary</h1>
+    </header>
+    <main class="container">
+        <section>
+            <h2>Dashboard</h2>
+            <hr> <!-- Add horizontal line -->
+            <div id="navigation" class="d-flex justify-content-between align-items-center mb-3">
+                <button id="prevMonth" class="btn btn-primary">Previous Month</button>
+                <h3 id="currentMonth"></h3>
+                <button id="nextMonth" class="btn btn-primary">Next Month</button>
+                <button id="today" class="btn btn-primary">Today</button>
+            </div>
+            <div id="eventFormContainer">
+                <button type="button" id="showAddEventForm" class="btn btn-primary">Add Event</button> <!-- Button to show add event form -->
+                <form id="eventForm" class="hidden">
+                    <label for="eventDate">Date:</label>
+                    <input type="date" id="eventDate" class="form-control" required>
+                    <label for="eventTime">Time:</label>
+                    <input type="time" id="eventTime" class="form-control" required>
+                    <label for="eventDescription">Description:</label>
+                    <input type="text" id="eventDescription" class="form-control" required>
+                    <label for="studentName">Student Name:</label>
+                    <select id="studentName" class="form-control" required>
+                        <option value="">Select Student</option>
+                        <!-- Student options will be added dynamically -->
+                    </select>
+                    <button type="submit" class="btn btn-primary">Add Event</button>
+                    <button type="button" id="updateEvent" class="btn btn-secondary">Update Event</button>
+                </form>
+            </div>
+            <hr> <!-- Add horizontal line -->
+            <div class="calendar" id="calendar"></div>
+            <hr> <!-- Add horizontal line -->
+            <h3>Students</h3>
+            <table id="studentTable" class="table">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>ID</th>
+                        <th>Phone Number</th>
+                        <th>Rate per Hour</th>
+                        <th>Driving Type</th>
+                        <th>Actions</th> <!-- Add Actions column -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Student data will be dynamically added here -->
+                </tbody>
+            </table>
+            <hr> <!-- Add horizontal line -->
+            <button type="button" id="showAddStudentForm" class="btn btn-primary">Add New Student</button> <!-- Button to show add student form -->
+            <form id="newStudentForm" class="hidden"> <!-- Add hidden class to the form -->
+                <h3>Add New Student</h3>
+                <label for="newStudentName">Student Name:</label>
+                <input type="text" id="newStudentName" class="form-control" required>
+                <label for="phoneNumber">Phone Number:</label>
+                <input type="tel" id="phoneNumber" class="form-control" required>
+                <label for="ratePerHour">Rate per Hour:</label>
+                <input type="number" id="ratePerHour" class="form-control" min="0" step="any" required>
+                <label for="drivingType">Driving Type:</label>
+                <select id="drivingType" class="form-control" required>
+                    <option value="Manual">Manual</option>
+                    <option value="Automatic">Automatic</option>
+                </select>
+                <button type="button" id="addNewStudent" class="btn btn-primary">Add Student</button> <!-- Change type to button -->
+            </form>
+            <hr> <!-- Add horizontal line -->
+            <h3>Payments</h3>
+            <button type="button" id="showAddPaymentForm" class="btn btn-primary">Add New Payment</button> <!-- Button to show add payment form -->
+            <form id="paymentForm" class="hidden"> <!-- Add hidden class to the form -->
+                <label for="paymentDate">Payment Date:</label>
+                <input type="date" id="paymentDate" class="form-control" required>
+                <label for="studentNamePayment">Student Name:</label>
+                <select id="studentNamePayment" class="form-control" required>
+                    <option value="">Select Student</option>
+                    <!-- Student options will be added dynamically -->
+                </select>
+                <label for="amountPaid">Amount Paid:</label>
+                <input type="number" id="amountPaid" class="form-control" min="0" step="any" required>
+                <button type="submit" class="btn btn-primary">Record Payment</button>
+                <button type="button" id="updatePayment" class="btn btn-secondary">Update Payment</button>
+            </form>
+            <table id="paymentTable" class="table">
+                <thead>
+                    <tr>
+                        <th>Payment Date</th>
+                        <th>Student Name</th>
+                        <th>Amount Paid</th>
+                        <th>Actions</th> <!-- Add Actions column -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Payment data will be dynamically added here -->
+                </tbody>
+            </table>
+            <hr> <!-- Add horizontal line -->
+        </section>
+    </main>
+    <script>
+        // Existing JavaScript code remains the same
+        let students = [];
+        let events = [];
+        let payments = [];
+        let selectedEventId = null;
+        let selectedPaymentId = null;
+
+        function loadFromLocalStorage(key) {
+            try {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : [];
+            } catch (error) {
+                console.error('Error loading data from local storage:', error);
+                return [];
+            }
+        }
+
+        function saveToLocalStorage(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (error) {
+                console.error('Error saving data to local storage:', error);
+            }
+        }
+
+        function loadDataFromLocalStorage() {
+            students = loadFromLocalStorage('students');
+            events = loadFromLocalStorage('events');
+            payments = loadFromLocalStorage('payments');
+        }
+
+        function saveDataToLocalStorage() {
+            saveToLocalStorage('students', students);
+            saveToLocalStorage('events', events);
+            saveToLocalStorage('payments', payments);
+        }
+
+        loadDataFromLocalStorage();
+
+        function renderCalendar(year, month) {
+            const calendarEl = document.getElementById('calendar');
+            const currentDate = new Date(year, month, 1);
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const monthName = currentDate.toLocaleString('default', { month: 'long' });
+
+            let calendarHTML = '';
+            for (let i = 1; i <= daysInMonth; i++) {
+                const date = new Date(year, month, i);
+                const dayOfWeek = date.getDay();
+                const isCurrentDate = date.toDateString() === new Date().toDateString();
+                calendarHTML += `<div class="day ${isCurrentDate ? 'current-date' : ''}" data-day="${i}" data-month="${month}" data-year="${year}">${i}`;
+                const eventsForDate = events.filter(event => {
+                    const eventDate = new Date(event.date);
+                    return eventDate.getDate() === i && eventDate.getMonth() === month && eventDate.getFullYear() === year;
+                });
+                if (eventsForDate.length > 0) {
+                    calendarHTML += '<div class="events">';
+                    eventsForDate.forEach(event => {
+                        const student = students.find(student => student.id === event.studentId);
+                        const studentName = student ? student.name : 'Unknown';
+                        calendarHTML += `<div class="event" data-event-id="${event.id}">${event.description} (${event.time}) - ${studentName}`;
+                        calendarHTML += `<div class="event-actions"><button class="btn btn-danger btn-sm" onclick="deleteEvent(${event.id})">Delete</button> <button class="btn btn-secondary btn-sm" onclick="editEvent(${event.id})">Edit</button></div>`;
+                        calendarHTML += `</div>`;
+                    });
+                    calendarHTML += '</div>';
+                }
+                calendarHTML += '</div>';
+            }
+            calendarEl.innerHTML = calendarHTML;
+            document.getElementById('currentMonth').textContent = `${monthName} ${year}`;
+            document.querySelectorAll('.event').forEach(event => {
+                event.addEventListener('mouseenter', showEventActions);
+                event.addEventListener('mouseleave', hideEventActions);
+            });
+        }
+
+        function showEventActions(event) {
+            const actions = event.currentTarget.querySelector('.event-actions');
+            if (actions) actions.style.display = 'block';
+        }
+
+        function hideEventActions(event) {
+            const actions = event.currentTarget.querySelector('.event-actions');
+            if (actions) actions.style.display = 'none';
+        }
+
+        function handleFormSubmission(event) {
+    event.preventDefault();
+    const eventDate = document.getElementById('eventDate').value;
+    const eventTime = document.getElementById('eventTime').value;
+    const eventDescription = document.getElementById('eventDescription').value;
+    const studentId = document.getElementById('studentName').value;
+    if (selectedEventId !== null) {
+        const index = events.findIndex(event => event.id === selectedEventId);
+        if (index !== -1) {
+            events[index] = { id: selectedEventId, date: eventDate, time: eventTime, description: eventDescription, studentId: studentId };
+        }
+        selectedEventId = null;
+    } else {
+        events.push({ id: events.length + 1, date: eventDate, time: eventTime, description: eventDescription, studentId: studentId });
+    }
+    renderCalendar(new Date(eventDate).getFullYear(), new Date(eventDate).getMonth());
+    document.getElementById('eventDate').value = '';
+    document.getElementById('eventTime').value = '';
+    document.getElementById('eventDescription').value = '';
+    document.getElementById('studentName').value = '';
+    document.getElementById('updateEvent').style.display = 'none';
+    saveDataToLocalStorage();
+    document.getElementById('eventForm').classList.add('hidden'); // Hide the event form after submitting
+}
+        function editEvent(id) {
+    selectedEventId = id;
+    const selectedEvent = events.find(event => event.id === id);
+    if (selectedEvent) {
+        document.getElementById('eventDate').value = selectedEvent.date;
+        document.getElementById('eventTime').value = selectedEvent.time;
+        document.getElementById('eventDescription').value = selectedEvent.description;
+        document.getElementById('studentName').value = selectedEvent.studentId;
+        document.getElementById('updateEvent').style.display = 'inline';
+        document.getElementById('eventForm').classList.remove('hidden'); // Show the event form
+    }
+    // Hide the event form after finishing editing
+    //document.getElementById('eventForm').classList.add('hidden');
+}
+
+
+        function deleteEvent(id) {
+            events = events.filter(event => event.id !== id);
+            renderCalendar(new Date().getFullYear(), new Date().getMonth());
+            saveDataToLocalStorage();
+        }
+
+        function goToPreviousMonth() {
+            const currentMonthElement = document.getElementById('currentMonth');
+            let [month, year] = currentMonthElement.textContent.split(' ');
+            month = new Date(`${month} 1, ${year}`).getMonth() - 1;
+            year = new Date(`${month} 1, ${year}`).getFullYear();
+            renderCalendar(year, month);
+        }
+
+        function goToNextMonth() {
+            const currentMonthElement = document.getElementById('currentMonth');
+            let [month, year] = currentMonthElement.textContent.split(' ');
+            month = new Date(`${month} 1, ${year}`).getMonth() + 1;
+            year = new Date(`${month} 1, ${year}`).getFullYear();
+            renderCalendar(year, month);
+        }
+
+        function goToToday() {
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentMonth = currentDate.getMonth();
+            renderCalendar(currentYear, currentMonth);
+        }
+
+        function addNewStudent() {
+            const newStudentName = document.getElementById('newStudentName').value;
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const ratePerHour = document.getElementById('ratePerHour').value;
+            const drivingType = document.getElementById('drivingType').value;
+
+            if (newStudentName.trim() !== '' && phoneNumber.trim() !== '' && ratePerHour !== '' && drivingType !== '') {
+                const id = generateId(); // Generate unique ID
+                const newStudent = { name: newStudentName, id: id, phoneNumber: phoneNumber, ratePerHour: parseFloat(ratePerHour), drivingType: drivingType };
+                students.push(newStudent);
+                appendStudent(newStudent);
+                populateStudentDropdowns();
+                // Optionally, clear the input fields
+                document.getElementById('newStudentName').value = '';
+                document.getElementById('phoneNumber').value = '';
+                document.getElementById('ratePerHour').value = '';
+                document.getElementById('drivingType').value = '';
+                saveDataToLocalStorage();
+            }
+        }
+
+        function generateId() {
+            return '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function appendStudent(student) {
+            const studentTable = document.getElementById('studentTable').getElementsByTagName('tbody')[0];
+            const row = studentTable.insertRow();
+            const cellName = row.insertCell(0);
+            const cellId = row.insertCell(1);
+            const cellPhoneNumber = row.insertCell(2);
+            const cellRatePerHour = row.insertCell(3);
+            const cellDrivingType = row.insertCell(4);
+            const cellActions = row.insertCell(5); // Add Actions cell
+            cellName.innerHTML = student.name;
+            cellId.innerHTML = student.id;
+            cellPhoneNumber.innerHTML = student.phoneNumber;
+            cellRatePerHour.innerHTML = student.ratePerHour;
+            cellDrivingType.innerHTML = student.drivingType;
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.className = 'btn btn-danger btn-sm';
+            deleteButton.onclick = function() {
+                deleteStudent(student.id);
+            };
+            const editButton = document.createElement('button');
+            editButton.textContent = 'Edit';
+            editButton.className = 'btn btn-secondary btn-sm';
+            editButton.onclick = function() {
+                editStudent(student.id);
+            };
+            cellActions.appendChild(deleteButton);
+            cellActions.appendChild(editButton);
+        }
+
+        function editStudent(id) {
+    const student = students.find(student => student.id === id);
+    if (student) {
+        document.getElementById('newStudentName').value = student.name;
+        document.getElementById('phoneNumber').value = student.phoneNumber;
+        document.getElementById('ratePerHour').value = student.ratePerHour;
+        document.getElementById('drivingType').value = student.drivingType;
+        deleteStudent(id);
+        document.getElementById('showAddStudentForm').click(); // Close the form after editing
+    }
+}
+
+        function deleteStudent(id) {
+            students = students.filter(student => student.id !== id);
+            renderStudents();
+            populateStudentDropdowns();
+            saveDataToLocalStorage();
+        }
+
+        function renderStudents() {
+            const studentTable = document.getElementById('studentTable').getElementsByTagName('tbody')[0];
+            studentTable.innerHTML = ''; // Clear the table body
+            students.forEach(student => {
+                appendStudent(student);
+            });
+        }
+
+        function populateStudentDropdowns() {
+            const studentDropdowns = document.querySelectorAll('#studentName, #studentNamePayment');
+            studentDropdowns.forEach(dropdown => {
+                dropdown.innerHTML = '<option value="">Select Student</option>';
+                students.forEach(student => {
+                    const option = document.createElement('option');
+                    option.value = student.id;
+                    option.textContent = student.name;
+                    dropdown.appendChild(option);
+                });
+            });
+        }
+
+        function recordPayment(event) {
+            event.preventDefault();
+            const paymentDate = document.getElementById('paymentDate').value;
+            const studentId = document.getElementById('studentNamePayment').value;
+            const amountPaid = parseFloat(document.getElementById('amountPaid').value);
+            if (!isNaN(amountPaid)) {
+                const payment = { date: paymentDate, studentId: studentId, amountPaid: amountPaid };
+                payments.push(payment);
+                appendPayment(payment);
+                document.getElementById('paymentDate').value = '';
+                document.getElementById('studentNamePayment').value = '';
+                document.getElementById('amountPaid').value = '';
+                saveDataToLocalStorage();
+            }
+        }
+
+        function appendPayment(payment) {
+            const paymentTable = document.getElementById('paymentTable').getElementsByTagName('tbody')[0];
+            const row = paymentTable.insertRow();
+            const cellDate = row.insertCell(0);
+            const cellStudentName = row.insertCell(1);
+            const cellAmountPaid = row.insertCell(2);
+            const cellActions = row.insertCell(3); // Add Actions cell
+            cellDate.innerHTML = payment.date;
+            const student = students.find(student => student.id === payment.studentId);
+            cellStudentName.innerHTML = student ? student.name : 'Unknown';
+            cellAmountPaid.innerHTML = payment.amountPaid;
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.className = 'btn btn-danger btn-sm';
+            deleteButton.onclick = function() {
+                deletePayment(payment);
+            };
+            const editButton = document.createElement('button');
+            editButton.textContent = 'Edit';
+            editButton.className = 'btn btn-secondary btn-sm';
+            editButton.onclick = function() {
+                editPayment(payment);
+            };
+            cellActions.appendChild(deleteButton);
+            cellActions.appendChild(editButton);
+        }
+
+        function deletePayment(payment) {
+            payments = payments.filter(p => p !== payment);
+            renderPayments();
+            saveDataToLocalStorage();
+        }
+
+        function editPayment(payment) {
+    selectedPaymentId = payment; // Correctly assign the selected payment object
+    document.getElementById('paymentDate').value = payment.date;
+    document.getElementById('studentNamePayment').value = payment.studentId;
+    document.getElementById('amountPaid').value = payment.amountPaid;
+    document.getElementById('updatePayment').style.display = 'inline';
+    document.getElementById('showAddPaymentForm').click(); // Show the payment form for editing
+}
+
+
+function updatePayment(event) {
+    event.preventDefault();
+    const paymentDate = document.getElementById('paymentDate').value;
+    const studentId = document.getElementById('studentNamePayment').value;
+    const amountPaid = parseFloat(document.getElementById('amountPaid').value);
+    if (!isNaN(amountPaid)) {
+        const index = payments.findIndex(payment => payment === selectedPaymentId);
+        if (index !== -1) {
+            payments[index] = { date: paymentDate, studentId: studentId, amountPaid: amountPaid };
+        }
+        renderPayments();
+        document.getElementById('paymentDate').value = '';
+        document.getElementById('studentNamePayment').value = '';
+        document.getElementById('amountPaid').value = '';
+        document.getElementById('updatePayment').style.display = 'none';
+        selectedPaymentId = null;
+        saveDataToLocalStorage();
+        document.getElementById('paymentForm').classList.add('hidden'); // Hide the payment form after updating
+    }
+}
+
+        function renderPayments() {
+            const paymentTable = document.getElementById('paymentTable').getElementsByTagName('tbody')[0];
+            paymentTable.innerHTML = ''; // Clear the table body
+            payments.forEach(payment => {
+                appendPayment(payment);
+            });
+        }
+
+        document.getElementById('prevMonth').addEventListener('click', goToPreviousMonth);
+        document.getElementById('nextMonth').addEventListener('click', goToNextMonth);
+        document.getElementById('today').addEventListener('click', goToToday);
+        document.getElementById('eventForm').addEventListener('submit', handleFormSubmission);
+        document.getElementById('updateEvent').addEventListener('click', handleFormSubmission);
+        document.getElementById('addNewStudent').addEventListener('click', addNewStudent);
+        document.getElementById('paymentForm').addEventListener('submit', recordPayment);
+        document.getElementById('updatePayment').addEventListener('click', updatePayment);
+
+        renderCalendar(new Date().getFullYear(), new Date().getMonth());
+        renderStudents();
+        renderPayments();
+        populateStudentDropdowns();
+        document.getElementById('showAddStudentForm').addEventListener('click', function() {
+            document.getElementById('newStudentForm').classList.toggle('hidden');
+        });
+
+        document.getElementById('addNewStudent').addEventListener('click', addNewStudent);
+
+        function addNewStudent() {
+            const newStudentName = document.getElementById('newStudentName').value;
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const ratePerHour = document.getElementById('ratePerHour').value;
+            const drivingType = document.getElementById('drivingType').value;
+
+            if (newStudentName.trim() !== '' && phoneNumber.trim() !== '' && ratePerHour !== '' && drivingType !== '') {
+                const id = generateId(); // Generate unique ID
+                const newStudent = { name: newStudentName, id: id, phoneNumber: phoneNumber, ratePerHour: parseFloat(ratePerHour), drivingType: drivingType };
+                students.push(newStudent);
+                appendStudent(newStudent);
+                populateStudentDropdowns();
+                // Optionally, clear the input fields
+                document.getElementById('newStudentName').value = '';
+                document.getElementById('phoneNumber').value = '';
+                document.getElementById('ratePerHour').value = '';
+                document.getElementById('drivingType').value = '';
+                document.getElementById('newStudentForm').classList.add('hidden'); // Hide the form after adding student
+                saveDataToLocalStorage();
+            }
+        }
+
+        document.getElementById('showAddPaymentForm').addEventListener('click', function() {
+            document.getElementById('paymentForm').classList.toggle('hidden');
+        });
+        document.getElementById('showAddEventForm').addEventListener('click', function() {
+            document.getElementById('eventForm').classList.toggle('hidden');
+        });
+        document.getElementById('paymentForm').addEventListener('submit', recordPayment);
+
+        function recordPayment(event) {
+            event.preventDefault();
+            const paymentDate = document.getElementById('paymentDate').value;
+            const studentId = document.getElementById('studentNamePayment').value;
+            const amountPaid = parseFloat(document.getElementById('amountPaid').value);
+            if (!isNaN(amountPaid)) {
+                const payment = { date: paymentDate, studentId: studentId, amountPaid: amountPaid };
+                payments.push(payment);
+                appendPayment(payment);
+                document.getElementById('paymentDate').value = '';
+                document.getElementById('studentNamePayment').value = '';
+                document.getElementById('amountPaid').value = '';
+                document.getElementById('paymentForm').classList.add('hidden'); // Hide the form after adding payment
+                saveDataToLocalStorage();
+            }
+        }
+    </script>
+</body>
+</html>
